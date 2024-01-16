@@ -46,7 +46,7 @@ function wolfi() {
 }
 
 function _wolfi-check-deps() {
-	(echo "$PATH" | grep -qs "go/bin") || error "Missing $HOME/go/bin in your PATH: echo \"PATH=\$PATH:\$HOME/go/bin\""
+	(echo "$PATH" | grep -qs "go/bin") || error "Missing $HOME/go/bin in your PATH: echo \"PATH=\$PATH:\$HOME/go/bin\" >> ~/.bashrc && . ~/.bashrc"
 	. /etc/os-release
 	if [ "$NAME" = "Wolfi" ]; then
 		local pkg="apk add"
