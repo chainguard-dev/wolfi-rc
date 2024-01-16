@@ -46,6 +46,7 @@ function wolfi() {
 }
 
 function _wolfi-check-deps() {
+	(echo "$PATH" | grep -qs "go/bin") || error "Missing $HOME/go/bin in your PATH: echo \"PATH=\$PATH:\$HOME/go/bin\""
 	. /etc/os-release
 	if [ "$NAME" = "Wolfi" ]; then
 		local pkg="apk add"
@@ -54,7 +55,7 @@ function _wolfi-check-deps() {
 		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker"
 		type melange 2>&1 >/dev/null || error "Missing 'melange': sudo $pkg melange"
 		type terraform 2>&1 >/dev/null || error "Missing 'terraform': sudo $pkg terraform"
-		type yam 2>&1 >/dev/null || error "Missing 'yam': go install chainguard.dev/yam@latest"
+		type yam 2>&1 >/dev/null || error "Missing 'yam': go install github.com/chainguard-dev/yam@latest"
 	elif [ "$NAME" = "Ubuntu" ]; then
 		local pkg="apt install"
 		type gh 2>&1 >/dev/null || error "Missing 'gh': sudo $pkg gh"
@@ -62,7 +63,7 @@ function _wolfi-check-deps() {
 		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker"
 		type melange 2>&1 >/dev/null || error "Missing 'melange': go install chainguard.dev/melange@latest"
 		type terraform 2>&1 >/dev/null || error "Missing 'terraform': go install github.com/hashicorp/terraform@latest"
-		type yam 2>&1 >/dev/null || error "Missing 'yam': go install chainguard.dev/yam@latest"
+		type yam 2>&1 >/dev/null || error "Missing 'yam': go install github.com/chainguard-dev/yam@latest"
 
 	fi
 	export TERRAFORM=$(command -v terraform)
