@@ -30,6 +30,7 @@ they do...
  - wolfi-sdk: Launch latest Wolfi in a docker container for building packages
  - wolfi-shell: Launch latest Wolfi in a docker container
  - wolfi-source: Get the current Wolfi OS source code
+ - wolfi-yam: Reformat yaml to Wolfi specifications
 "
 
 function info() {
@@ -45,10 +46,11 @@ function wolfi() {
 }
 
 function _wolfi-check-deps() {
-	type git 2>&1 >/dev/null || error "You need to install 'git': sudo apt install git"
-	type docker 2>&1 >/dev/null || error "You need to install 'git': sudo apt install docker"
-	type melange 2>&1 >/dev/null || error "You need to install 'melange': go install chainguard.dev/melange@latest"
-	type terraform 2>&1 >/dev/null || error "You need to install 'terraform': go install github.com/hashicorp/terraform@latest"
+	type git 2>&1 >/dev/null || error "You need to install 'git':\n sudo apt install git"
+	type docker 2>&1 >/dev/null || error "You need to install 'git':\n sudo apt install docker"
+	type melange 2>&1 >/dev/null || error "You need to install 'melange':\n go install chainguard.dev/melange@latest"
+	type terraform 2>&1 >/dev/null || error "You need to install 'terraform':\n go install github.com/hashicorp/terraform@latest"
+	type yam 2>&1 >/dev/null || error "You need to install 'yam':\n go install chainguard.dev/yam@latest"
 	export TERRAFORM=$(command -v terraform)
 }
 
@@ -123,6 +125,10 @@ function wolfi-image-new() {
 	# 1=image name, 2=entry point
 	go run ./monopod/monopod.go scaffold "$1" --entrypoint "$2"
 	info "Generated images/$1"
+}
+
+function wolfi-yaml() {
+	yam "$@"
 }
 
 # First step in making images, is a make init in images directory

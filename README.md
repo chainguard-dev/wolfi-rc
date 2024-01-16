@@ -10,6 +10,8 @@ I've tested it on Ubuntu and Google Cloud Shell's Debian.  It probably needs som
 To use:
 
 ```
+$ mkdir -p ~/src
+$ cd ~/src
 $ git clone https://github.com/dustinkirkland/wolfi-rc
 $ echo ". $PWD/wolfi-rc/wolfi-rc" >> ~/.bashrc
 $ . ~/.bashrc
