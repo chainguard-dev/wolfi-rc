@@ -98,8 +98,8 @@ function _wolfi-latest() {
 
 function wolfi-local() {
 	_wolfi-latest
-	cd wolfi-dev/os
 	grep -qs "This is the main package repository for the Wolfi project" README.md 2>/dev/null || wolfi-source
+	cd wolfi-dev/os
 	mkdir -p packages
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	make local-wolfi
