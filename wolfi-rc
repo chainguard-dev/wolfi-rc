@@ -34,15 +34,15 @@ they do...
 "
 
 function info() {
-	echo "INFO: $@"
+	printf "%s\n" "INFO: $@"
 }
 
 function error() {
-	echo "ERROR: $@" 1>&2
+	printf "%s\n" "ERROR: $@" 1>&2
 }
 
 function wolfi() {
-	echo "$HELP"
+	printf "%s\n" "$HELP"
 }
 
 function _wolfi-check-deps() {
