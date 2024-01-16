@@ -69,6 +69,7 @@ function wolfi-branch() {
 	cd wolfi-os
 	git switch "$BRANCH" || git branch "$BRANCH" && git switch "$BRANCH"
 	git push origin -u "$1"
+	git config pull.rebase true
 }
 
 function wolfi-grype() {
