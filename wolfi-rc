@@ -72,16 +72,15 @@ function _wolfi-check-deps() {
 _wolfi-check-deps
 
 function wolfi-branch() {
-	local URL="git@github.com:$GH_USER/wolfi-os.git"
+	local url="git@github.com:$GH_USER/wolfi-os.git"
 	[ -z "$1" ] && error "You must specify a branch name" && return
-	local BRANCH="$1"
+	local branch="$1"
 	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
-	gh repo sync $GH_USER/wolfi-os -b "$BRANCH"
-	local DIR=$(mktemp -d wolfi-XXXXXXXX)
-	cd "$DIR"
-	git clone "$URL" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
+	gh repo sync $GH_USER/wolfi-os -b "$branch"
+	wolfi-sandbox
+	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
-	git switch "$BRANCH" || git branch "$BRANCH" && git switch "$BRANCH"
+	git switch "$branch" || git branch "$branch" && git switch "$branch"
 	git push origin -u "$1"
 	git config pull.rebase true
 }
@@ -104,6 +103,12 @@ function wolfi-local() {
 	make local-wolfi
 }
 
+function wolfi-sandbox() {
+	local d=$(mktemp -d /tmp/wolfi-$(date +%Y%m%d-%H%M%S)-XXXXXXXX)
+	cd "$d"
+	echo "$d"
+}
+
 function wolfi-sdk() {
 	_wolfi-latest
 	grep -qs "This is the main package repository for the Wolfi project" README.md 2>/dev/null || wolfi-source
@@ -116,16 +121,16 @@ function wolfi-shell() {
 }
 
 function wolfi-source() {
-	local OS_URL="git@github.com:wolfi-dev/os.git"
-	local IMAGES_URL="git@github.com:chainguard-images/images.git"
-	local DIR="$PWD"/$(mktemp -d wolfi-XXXXXXXX)
-	mkdir -p "$DIR/github.com/wolfi-dev/"
-	cd "$DIR/github.com/wolfi-dev/"
-	git clone --depth=1 "$OS_URL" os
-	mkdir -p "$DIR/github.com/chainguard-images/"
-	cd "$DIR/github.com/chainguard-images/"
-	git clone --depth=1 "$IMAGES_URL" images
-	cd "$DIR"/github.com
+	local os_url="git@github.com:wolfi-dev/os.git"
+	local images_url="git@github.com:chainguard-images/images.git"
+	local dir="$(wolfi-sandbox)"
+	mkdir -p "$dir/github.com/wolfi-dev/"
+	cd "$dir/github.com/wolfi-dev/"
+	git clone --depth=1 "$os_url" os
+	mkdir -p "$dir/github.com/chainguard-images/"
+	cd "$dir/github.com/chainguard-images/"
+	git clone --depth=1 "$images_url" images
+	cd "$dir"/github.com
 	info "You now have a clean clone of wolfi-dev/os and chainguard-images/images"
 }
 
