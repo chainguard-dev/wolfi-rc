@@ -46,6 +46,7 @@ function wolfi() {
 }
 
 function _wolfi-check-deps() {
+	type gh 2>&1 >/dev/null || error "You need to install 'git':\n sudo apt install gh"
 	type git 2>&1 >/dev/null || error "You need to install 'git':\n sudo apt install git"
 	type docker 2>&1 >/dev/null || error "You need to install 'git':\n sudo apt install docker"
 	type melange 2>&1 >/dev/null || error "You need to install 'melange':\n go install chainguard.dev/melange@latest"
@@ -57,14 +58,17 @@ function _wolfi-check-deps() {
 _wolfi-check-deps
 
 function wolfi-branch() {
-	local URL="https://github.com/$GH_USER/wolfi-os.git"
+	local URL="git@github.com:$GH_USER/wolfi-os.git"
 	[ -z "$1" ] && error "You must specify a branch name" && return
+	local BRANCH="$1"
 	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
+	gh repo sync $GH_USER/wolfi-os -b "$BRANCH"
 	local DIR=$(mktemp -d wolfi-XXXXXXXX)
 	cd "$DIR"
 	git clone "$URL" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
-	git switch "$1" || git branch "$1" && git switch "$1"
+	git switch "$BRANCH" || git branch "$BRANCH" && git switch "$BRANCH"
+	git push origin -u "$1"
 }
 
 function wolfi-grype() {
@@ -97,8 +101,8 @@ function wolfi-shell() {
 }
 
 function wolfi-source() {
-	local OS_URL="https://github.com/wolfi-dev/os.git"
-	local IMAGES_URL="https://github.com/chainguard-images/images.git"
+	local OS_URL="git@github.com:wolfi-dev/os.git"
+	local IMAGES_URL="git@github.com:chainguard-images/images.git"
 	local DIR="$PWD"/$(mktemp -d wolfi-XXXXXXXX)
 	mkdir -p "$DIR/github.com/wolfi-dev/"
 	cd "$DIR/github.com/wolfi-dev/"
