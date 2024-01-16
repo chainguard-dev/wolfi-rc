@@ -98,7 +98,10 @@ function _wolfi-latest() {
 
 function wolfi-local() {
 	_wolfi-latest
-	grep -qs "This is the main package repository for the Wolfi project" README.md 2>/dev/null || (wolfi-source && cd wolfi-dev/os)
+	if ! grep -qs "^local-wolfi:" Makefile 2>/dev/null; then
+	       wolfi-source
+	       cd wolfi-dev/os
+	fi
 	mkdir -p packages
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	make local-wolfi
@@ -112,7 +115,10 @@ function wolfi-sandbox() {
 
 function wolfi-sdk() {
 	_wolfi-latest
-	grep -qs "This is the main package repository for the Wolfi project" README.md 2>/dev/null || (wolfi-source && cd wolfi-dev/os)
+	if ! grep -qs "^dev-container:" Makefile 2>/dev/null; then
+	       wolfi-source
+	       cd wolfi-dev/os
+	fi
 	make dev-container
 }
 
