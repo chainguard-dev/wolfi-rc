@@ -23,7 +23,7 @@ on Wolfi and Chainguard, within a command line environment.
 Below, you can find some helpful hints on the available commands, and what
 they do...
 
- - wolfi-branch [BRANCH_NAME]: Get your branch of the WOlfi OS source code
+ - wolfi-branch [BRANCH_NAME]: Get your branch of the Wolfi OS source code
    - NOTE: You must set GH_USER to your github username
  - wolfi-grype [TARGET]: Run grype on a given target
  - wolfi-local: Launch latest Wolfi in a docker container, with a local package repository
