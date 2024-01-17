@@ -51,17 +51,19 @@ function _wolfi-check-deps() {
 	. /etc/os-release
 	if [ "$NAME" = "Wolfi" ]; then
 		local pkg="apk add"
+		type go 2>&1 >/dev/null || error "Missing 'go': sudo $pkg go"
 		type gh 2>&1 >/dev/null || error "Missing 'gh': sudo $pkg gh"
 		type git 2>&1 >/dev/null || error "Missing 'git': sudo $pkg git"
 		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker"
 		type melange 2>&1 >/dev/null || error "Missing 'melange': sudo $pkg melange"
 		type terraform 2>&1 >/dev/null || error "Missing 'terraform': sudo $pkg terraform"
 		type yam 2>&1 >/dev/null || error "Missing 'yam': go install github.com/chainguard-dev/yam@latest"
-	elif [ "$NAME" = "Ubuntu" ]; then
+	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		local pkg="apt install"
+		type go 2>&1 >/dev/null || error "Missing 'go': sudo snap install go --classic"
 		type gh 2>&1 >/dev/null || error "Missing 'gh': sudo $pkg gh"
 		type git 2>&1 >/dev/null || error "Missing 'git': sudo $pkg git"
-		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker"
+		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker.io && sudo usermod -a -G docker $USER && newgrp docker"
 		type melange 2>&1 >/dev/null || error "Missing 'melange': go install chainguard.dev/melange@latest"
 		type terraform 2>&1 >/dev/null || error "Missing 'terraform': go install github.com/hashicorp/terraform@latest"
 		type yam 2>&1 >/dev/null || error "Missing 'yam': go install github.com/chainguard-dev/yam@latest"
