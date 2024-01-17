@@ -13,7 +13,7 @@ To use:
 mkdir -p ~/src
 cd ~/src
 git clone https://github.com/dustinkirkland/wolfi-rc
-echo ". $PWD/wolfi-rc/wolfi-rc" >> ~/.bashrc
+echo ". $PWD/wolfi-rc" >> ~/.bashrc
 . ~/.bashrc
 ```
 
