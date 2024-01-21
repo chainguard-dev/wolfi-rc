@@ -87,6 +87,7 @@ function wolfi-branch() {
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
 	git switch "$branch" || git branch "$branch" && git switch "$branch"
+	git remote set-url origin git@github.com:$GH_USER/wolfi-rc.git
 	git push origin -u "$1"
 	git config pull.rebase true
 }
@@ -165,6 +166,38 @@ function wolfi-image-new() {
 
 function wolfi-yaml() {
 	yam "$@"
+}
+
+function wolfi-convert-alpine() {
+	local pkg="$1" i= url=
+	[ -z "$pkg" ] && error "Specific Alpine package to convert" && return 1
+	for i in main community; do
+		if wget -q -O/dev/null https://git.alpinelinux.org/aports/plain/$i/$pkg/APKBUILD; then
+			url=https://git.alpinelinux.org/aports/plain/$i/%s/APKBUILD
+		fi
+	done
+	[ -z "$url" ] && error "Alpine package not found [$pkg]" && return 1
+	if [ -e "$pkg".yaml ]; then
+		if wget -q -O/dev/null https://github.com/wolfi-dev/os/blob/main/$pkg.yaml; then
+			error "$pkg.yaml already exists at https://github.com/wolfi-dev/os/blob/main/$pkg.yaml" && return 1
+		fi
+	fi
+	wolfi-branch "$1"
+	local outdir="$(mktemp -d melange-XXXXXXXX)"
+	melange convert apkbuild $pkg --out-dir="$outdir" --base-uri-format="$url"
+	mv -f "$outdir"/*yaml "$pkg.yaml"
+	yam "$pkg.yaml"
+	rm -rf "$oudir"
+	echo "==="
+	cat "$pkg.yaml"
+	echo "==="
+	echo
+	info "Wrote $pkg.yaml -- probably needs a little work"
+	info "Hints:"
+	info " - edit $pkg.yaml"
+	info " - run 'wolfi-sdk' to get a build environment"
+	info " - run 'make package/$pkg' inside the SDK build environment to get a new apk"
+	info " - run 'wolfi-local' and then 'apk add $pkg' to try installing and running your package"
 }
 
 # First step in making images, is a make init in images directory
