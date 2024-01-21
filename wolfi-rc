@@ -87,7 +87,7 @@ function wolfi-branch() {
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
 	git switch "$branch" || git branch "$branch" && git switch "$branch"
-	git remote set-url origin git@github.com:$GH_USER/wolfi-rc.git
+	git remote set-url origin git@github.com:$GH_USER/wolfi-os.git
 	git push origin -u "$1"
 	git config pull.rebase true
 }
