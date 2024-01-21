@@ -81,6 +81,7 @@ function wolfi-branch() {
 	[ -z "$1" ] && error "You must specify a branch name" && return
 	local branch="$1"
 	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
+	gh repo sync $GH_USER/wolfi-os -b main
 	gh repo sync $GH_USER/wolfi-os -b "$branch"
 	wolfi-sandbox
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
