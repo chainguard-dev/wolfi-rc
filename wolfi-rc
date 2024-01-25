@@ -72,6 +72,7 @@ function _wolfi-check-deps() {
 
 	fi
 	export TERRAFORM=$(command -v terraform)
+	groups | grep -q docker || newgrp docker
 }
 
 _wolfi-check-deps
