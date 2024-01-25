@@ -50,15 +50,14 @@ function _wolfi-check-deps() {
 	(echo "$PATH" | grep -qs "PATH.*go/bin") || export PATH="$PATH:$HOME/go/bin"
 	. /etc/os-release
 	if [ "$NAME" = "Wolfi" ]; then
-		local pkg="apk add"
-		type go 2>&1 >/dev/null || error "Missing 'go': sudo $pkg go"
-		type gh 2>&1 >/dev/null || error "Missing 'gh': sudo $pkg gh"
-		type git 2>&1 >/dev/null || error "Missing 'git': sudo $pkg git"
-		type docker 2>&1 >/dev/null || error "Missing 'docker': sudo $pkg docker"
-		type make 2>&1 >/dev/null || error "Missing 'make': sudo $pkg make"
-		type melange 2>&1 >/dev/null || error "Missing 'melange': sudo $pkg melange"
-		type terraform 2>&1 >/dev/null || error "Missing 'terraform': sudo $pkg terraform"
-		type yam 2>&1 >/dev/null || error "Missing 'yam': sudo $pkg yam"
+		type go 2>&1 >/dev/null || sudo apk add go
+		type gh 2>&1 >/dev/null || sudo apk add gh
+		type git 2>&1 >/dev/null || sudo apk add git
+		type docker 2>&1 >/dev/null || (sudo apk add docker && usermod -a -G docker $USER)
+		type make 2>&1 >/dev/null || sudo apk add make
+		type melange 2>&1 >/dev/null || sudo apk add melange
+		type terraform 2>&1 >/dev/null || sudo apk add terraform
+		type yam 2>&1 >/dev/null || sudo apk add yam
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		local pkg="apt install"
 		type go 2>&1 >/dev/null || sudo snap install go --classic
