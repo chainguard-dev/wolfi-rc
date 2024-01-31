@@ -31,8 +31,23 @@ they do...
  - wolfi-sandbox: cd into a temporary directory in the form /tmp/wolfi-YYYYMMDD-HHMMSS-XXXXXXXX
  - wolfi-shell: Launch latest Wolfi in a docker container
  - wolfi-source: Get the current Wolfi OS and Images source code, in a new wolfi-sandbox directory
+ - wolfi-work: start your workstation and ssh to it
  - wolfi-yam: Reformat yaml to Wolfi specifications
 "
+
+# Note: you will need to export your Google Cloud user name (mine is first-last)
+alias wolfi-work="gcloud workstations start \
+	        --project=chainguard-workstations \
+		--cluster=work \
+		--config=work \
+		--region=us-central1 \
+		$GC_USER;
+		gcloud workstations ssh \
+		--project=chainguard-workstations \
+		--cluster=work \
+		--config=work \
+		--region=us-central1 \
+		$GC_USER"
 
 function info() {
 	printf "%s\n" "INFO: $@"
