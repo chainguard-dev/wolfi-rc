@@ -42,7 +42,7 @@ function error() {
 	printf "%s\n" "ERROR: $@" 1>&2
 }
 
-function wolfi() {
+function wolfi-help() {
 	printf "%s\n" "$HELP"
 }
 
