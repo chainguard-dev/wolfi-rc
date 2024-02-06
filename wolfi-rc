@@ -149,6 +149,9 @@ function wolfi-pr() {
 	# TODO: Maybe use "git web--browse" or "sensible-browser" in the future?"
 	#       For now, let's just print a URL where you can go to review and submit
 	#       your PR.
+	local diff=$(git diff -a | wc -l)
+	[ "$?" != 0 ] && error "Something wrong with your local git repository" && return 1
+	[ "$diff" -gt 0 ] && error "Uncommitted changes; see 'git diff -a'" && return 1
 	local branch=$(git branch --show-current)
 	echo
 	echo "Open to submit pull request:"
