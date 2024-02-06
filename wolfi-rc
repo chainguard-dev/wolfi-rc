@@ -63,8 +63,20 @@ function wolfi-help() {
 
 function _wolfi-check-deps() {
 	(echo "$PATH" | grep -qs "PATH.*go/bin") || export PATH="$PATH:$HOME/go/bin"
-	. /etc/os-release
-	if [ "$NAME" = "Wolfi" ]; then
+	UNAMEO=$(uname -o)
+	if [ "$UNAMEO" != "Darwin" ]; then
+		. /etc/os-release
+	fi
+	if [ -z "$NAME" ] && [ "$UNAMEO" = "Darwin" ]; then
+		type go 2>&1 >/dev/null || brew install go
+		type gh 2>&1 >/dev/null || brew install gh
+		type git 2>&1 >/dev/null || brew install git
+		type docker 2>&1 >/dev/null || brew install docker
+		type make 2>&1 >/dev/null || brew install make
+		type melange 2>&1 >/dev/null || brew install melange
+		type terraform 2>&1 >/dev/null || brew install terraform
+		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
+	elif [ "$NAME" = "Wolfi" ]; then
 		type go 2>&1 >/dev/null || sudo apk add go
 		type gh 2>&1 >/dev/null || sudo apk add gh
 		type git 2>&1 >/dev/null || sudo apk add git
@@ -74,7 +86,6 @@ function _wolfi-check-deps() {
 		type terraform 2>&1 >/dev/null || sudo apk add terraform
 		type yam 2>&1 >/dev/null || sudo apk add yam
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
-		local pkg="apt install"
 		type go 2>&1 >/dev/null || sudo snap install go --classic
 		type gh 2>&1 >/dev/null || sudo snap install gh
 		type git 2>&1 >/dev/null || sudo apt install git
@@ -83,10 +94,15 @@ function _wolfi-check-deps() {
 		type melange 2>&1 >/dev/null || go install chainguard.dev/melange@latest
 		type terraform 2>&1 >/dev/null || go install github.com/hashicorp/terraform@latest
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
-
+	else
+		echo "$NAME"
+		echo "Running on an unsupported OS"
+		exit 1
 	fi
 	export TERRAFORM=$(command -v terraform)
-	groups | grep -q docker || newgrp docker
+	if [ "$UNAMEO" != "Darwin" ]; then
+		groups | grep -q docker || newgrp docker
+	fi
 }
 
 _wolfi-check-deps
@@ -145,7 +161,7 @@ function wolfi-sdk() {
 
 function wolfi-shell() {
 	_wolfi-latest
-	docker run --rm -it $DOCKER_RUN_OPTS cgr.dev/chainguard/wolfi-base:latest "$@"
+	docker run --rm -it "$DOCKER_RUN_OPTS" cgr.dev/chainguard/wolfi-base:latest "$@"
 }
 
 function wolfi-source() {
@@ -166,7 +182,7 @@ function wolfi-image() {
 	wolfi-source
 	cd chainguard-images/images
 	make init
-	make image/$1
+	make "image/$1"
 }
 
 function wolfi-image-new() {
@@ -184,25 +200,25 @@ function wolfi-yaml() {
 }
 
 function wolfi-convert-alpine() {
-	local pkg="$1" i= url=
+	local pkg="$1" i='' url=''
 	[ -z "$pkg" ] && error "Specific Alpine package to convert" && return 1
 	for i in main community; do
-		if wget -q -O/dev/null https://git.alpinelinux.org/aports/plain/$i/$pkg/APKBUILD; then
+		if wget -q -O/dev/null "https://git.alpinelinux.org/aports/plain/$i/$pkg/APKBUILD"; then
 			url=https://git.alpinelinux.org/aports/plain/$i/%s/APKBUILD
 		fi
 	done
 	[ -z "$url" ] && error "Alpine package not found [$pkg]" && return 1
 	if [ -e "$pkg".yaml ]; then
-		if wget -q -O/dev/null https://github.com/wolfi-dev/os/blob/main/$pkg.yaml; then
+		if wget -q -O/dev/null "https://github.com/wolfi-dev/os/blob/main/$pkg.yaml"; then
 			error "$pkg.yaml already exists at https://github.com/wolfi-dev/os/blob/main/$pkg.yaml" && return 1
 		fi
 	fi
 	wolfi-branch "$1"
 	local outdir="$(mktemp -d melange-XXXXXXXX)"
-	melange convert apkbuild $pkg --out-dir="$outdir" --base-uri-format="$url"
+	melange convert apkbuild "$pkg" --out-dir="$outdir" --base-uri-format="$url"
 	mv -f "$outdir"/*yaml "$pkg.yaml"
 	yam "$pkg.yaml"
-	rm -rf "$oudir"
+	rm -rf "$outdir"
 	echo "==="
 	cat "$pkg.yaml"
 	echo "==="
