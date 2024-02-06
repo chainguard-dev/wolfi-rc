@@ -173,7 +173,7 @@ function wolfi-sdk() {
 
 function wolfi-shell() {
 	_wolfi-latest
-	docker run --rm -it "$DOCKER_RUN_OPTS" cgr.dev/chainguard/wolfi-base:latest "$@"
+	docker run --rm -it $DOCKER_RUN_OPTS cgr.dev/chainguard/wolfi-base:latest "$@"
 }
 
 function wolfi-source() {
