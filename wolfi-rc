@@ -73,7 +73,6 @@ function _wolfi-check-deps() {
 	fi
 	if [ -z "$NAME" ] && [ "$UNAMEO" = "Darwin" ]; then
 		type go 2>&1 >/dev/null || brew install go
-		type gh 2>&1 >/dev/null || brew install gh
 		type git 2>&1 >/dev/null || brew install git
 		type docker 2>&1 >/dev/null || brew install docker
 		type make 2>&1 >/dev/null || brew install make
@@ -82,7 +81,6 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 	elif [ "$NAME" = "Wolfi" ]; then
 		type go 2>&1 >/dev/null || sudo apk add go
-		type gh 2>&1 >/dev/null || sudo apk add gh
 		type git 2>&1 >/dev/null || sudo apk add git
 		type docker 2>&1 >/dev/null || (sudo apk add docker && usermod -a -G docker $USER)
 		type make 2>&1 >/dev/null || sudo apk add make
@@ -91,7 +89,6 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || sudo apk add yam
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		type go 2>&1 >/dev/null || sudo snap install go --classic
-		type gh 2>&1 >/dev/null || sudo snap install gh
 		type git 2>&1 >/dev/null || sudo apt install git
 		type docker 2>&1 >/dev/null || (sudo apt install docker.io && sudo usermod -a -G docker $USER)
 		type make 2>&1 >/dev/null || sudo apt install make
@@ -116,14 +113,14 @@ function wolfi-branch() {
 	[ -z "$1" ] && error "You must specify a branch name" && return
 	local branch="$1"
 	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
-	gh repo sync $GH_USER/wolfi-os -b main
-	gh repo sync $GH_USER/wolfi-os -b "$branch"
 	wolfi-sandbox
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
+	git fetch git@github.com:wolfi-dev/os
+	git rebase main
 	git switch "$branch" || git branch "$branch" && git switch "$branch"
 	git remote set-url origin git@github.com:$GH_USER/wolfi-os.git
-	git push origin -u "$1"
+	git push origin -u "$branch"
 	git config pull.rebase true
 }
 
