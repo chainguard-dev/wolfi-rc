@@ -39,6 +39,8 @@ they do...
  - wolfi-yam: Reformat yaml to Wolfi specifications
 "
 
+type vim 2>/dev/null 1>&2 && alias vi=vim
+
 # Note: you will need to export your Google Cloud user name (mine is first-last)
 alias wolfi-work="gcloud workstations start \
 	        --project=chainguard-workstations \
