@@ -12,7 +12,7 @@ I've tested it on Ubuntu and Google Cloud Shell's Debian.  It probably needs som
 ```
 mkdir -p ~/src
 cd ~/src
-git clone https://github.com/chainguard-dev/wolfi-rc
+git clone git@github.com:chainguard-dev/wolfi-rc.git
 echo ". $PWD/wolfi-rc" >> ~/.bashrc
 . ~/.bashrc
 ```
