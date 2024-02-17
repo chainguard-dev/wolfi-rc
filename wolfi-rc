@@ -80,6 +80,7 @@ function _wolfi-check-deps() {
 		type terraform 2>&1 >/dev/null || brew install terraform
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 	elif [ "$NAME" = "Wolfi" ]; then
+		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
 		type git 2>&1 >/dev/null || sudo apk add git
 		type docker 2>&1 >/dev/null || (sudo apk add docker && usermod -a -G docker $USER)
