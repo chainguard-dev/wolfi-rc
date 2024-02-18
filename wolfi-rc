@@ -192,13 +192,13 @@ function wolfi-source() {
 	local dir="$(wolfi-sandbox)"
 	mkdir -p "$dir/github.com/wolfi-dev/"
 	cd "$dir/github.com/wolfi-dev/"
-	git clone --depth=1 "$os_url" os
+	git clone "$os_url" os
 	mkdir -p os/packages
 	cd "$dir/github.com/wolfi-dev/os"
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	mkdir -p "$dir/github.com/chainguard-dev"
 	cd "$dir/github.com/chainguard-dev"
-	git clone --depth=1 "$images_url" images
+	git clone "$images_url" images
 	cd "$dir"/github.com
 	info "You now have a clean clone of wolfi-dev/os and chainguard-dev/images"
 }
@@ -257,3 +257,48 @@ function wolfi-convert-alpine() {
 }
 
 # First step in making images, is a make init in images directory
+
+
+function wolfi-count-source() {
+	grep "^package:" *.yaml | wc -l
+}
+
+function wolfi-count-binary() {
+	grep name: *.yaml | sed -e "s/.*name: //" -e "s/\"//g" | grep -v "\s" | sort -u | wc -l
+}
+
+function wolfi-count-patches() {
+	find . -type f -name "*.patch" | wc -l
+}
+
+function wolfi-count-yaml-lines() {
+	wc -l *.yaml | grep "total$" | awk '{print $1}'
+}
+
+function wolfi-count-commits() {
+	git log --pretty=format:'' | wc -l
+}
+
+function wolfi-numbers() {
+	local years=$(seq 2023 2024)
+	local months=$(seq -w 1 12)
+	local today=$(date +%Y%m%d)
+	local y= m= t= s= b= p= l= g=
+	wolfi-sandbox
+	git clone git@github.com:chainguard-dev/wolfi-os
+	cd wolfi-os
+	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS"
+	for y in $years; do
+		for m in $months; do
+			t="$y-$m-01"
+			[ $(echo "$t" | sed -e "s/-//g") -gt "$today" ] && break
+			git checkout `git rev-list -n 1 --before="$t" main` >/dev/null 2>&1
+			s=$(wolfi-count-source)
+			b=$(wolfi-count-binary)
+			p=$(wolfi-count-patches)
+			l=$(wolfi-count-yaml-lines)
+			g=$(wolfi-count-commits)
+			echo "$t	$s	$b	$p	$l	$g"
+		done
+	done
+}
