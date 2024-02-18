@@ -112,19 +112,20 @@ function _wolfi-check-deps() {
 _wolfi-check-deps
 
 function wolfi-branch() {
-	local url="git@github.com:$GH_USER/wolfi-os.git"
-	[ -z "$1" ] && error "You must specify a branch name" && return
 	local branch="$1"
+	[ -z "$branch" ] && error "You must specify a branch name" && return
+	local url="git@github.com:$GH_USER/wolfi-os.git"
 	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
 	wolfi-sandbox
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
-	git fetch git@github.com:wolfi-dev/os
-	git rebase main
-	git switch "$branch" || git branch "$branch" && git switch "$branch"
+	git switch "$branch"
+	# Sync fork to wolfi-dev/os and update github
+	git remote add upstream git@github.com:wolfi-dev/os
+	git fetch upstream
+	git merge upstream/main
 	git remote set-url origin git@github.com:$GH_USER/wolfi-os.git
-	git push origin -u "$branch"
-	git config pull.rebase true
+	git push
 }
 
 function wolfi-grype() {
@@ -174,6 +175,9 @@ function wolfi-sdk() {
 	       wolfi-source
 	       cd wolfi-dev/os
 	fi
+	mkdir -p $HOME/tmp
+	mkdir -p packages
+	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	make dev-container
 }
 
@@ -184,16 +188,19 @@ function wolfi-shell() {
 
 function wolfi-source() {
 	local os_url="git@github.com:wolfi-dev/os.git"
-	local images_url="git@github.com:chainguard-images/images.git"
+	local images_url="git@github.com:chainguard-dev/images.git"
 	local dir="$(wolfi-sandbox)"
 	mkdir -p "$dir/github.com/wolfi-dev/"
 	cd "$dir/github.com/wolfi-dev/"
 	git clone --depth=1 "$os_url" os
-	mkdir -p "$dir/github.com/chainguard-images/"
-	cd "$dir/github.com/chainguard-images/"
+	mkdir -p os/packages
+	cd "$dir/github.com/wolfi-dev/os"
+	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
+	mkdir -p "$dir/github.com/chainguard-dev"
+	cd "$dir/github.com/chainguard-dev"
 	git clone --depth=1 "$images_url" images
 	cd "$dir"/github.com
-	info "You now have a clean clone of wolfi-dev/os and chainguard-images/images"
+	info "You now have a clean clone of wolfi-dev/os and chainguard-dev/images"
 }
 
 function wolfi-image() {
