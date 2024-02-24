@@ -279,6 +279,10 @@ function wolfi-count-commits() {
 	git log --pretty=format:'' | wc -l
 }
 
+function wolfi-count-tests() {
+	grep "^test:" *.yaml | wc -l
+}
+
 function wolfi-numbers() {
 	local years=$(seq 2023 2024)
 	local months=$(seq -w 1 12)
@@ -287,7 +291,7 @@ function wolfi-numbers() {
 	wolfi-sandbox
 	git clone git@github.com:chainguard-dev/wolfi-os
 	cd wolfi-os
-	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS"
+	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS	TESTS"
 	for y in $years; do
 		for m in $months; do
 			t="$y-$m-01"
@@ -298,7 +302,8 @@ function wolfi-numbers() {
 			p=$(wolfi-count-patches)
 			l=$(wolfi-count-yaml-lines)
 			g=$(wolfi-count-commits)
-			echo "$t	$s	$b	$p	$l	$g"
+			tests=$(wolfi-count-tests)
+			echo "$t	$s	$b	$p	$l	$g	$tests"
 		done
 	done
 }
