@@ -121,7 +121,7 @@ function wolfi-branch() {
 	cd wolfi-os
 	git switch "$branch"
 	# Sync fork to wolfi-dev/os and update github
-	git remote add upstream git@github.com:wolfi-dev/os
+	git remote add upstream git@github.com:chainguard-dev/wolfi-os
 	git fetch upstream
 	git merge upstream/main
 	git remote set-url origin git@github.com:$GH_USER/wolfi-os.git
@@ -142,7 +142,7 @@ function wolfi-local() {
 	_wolfi-latest
 	if ! grep -qs "^local-wolfi:" Makefile 2>/dev/null; then
 	       wolfi-source
-	       cd wolfi-dev/os
+	       cd wolfi-os
 	fi
 	mkdir -p packages
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
@@ -159,7 +159,7 @@ function wolfi-pr() {
 	local branch=$(git branch --show-current)
 	echo
 	echo "Open to submit pull request:"
-	echo " - https://github.com/wolfi-dev/os/compare/main...$GH_USER:wolfi-os:$branch?expand=1"
+	echo " - https://github.com/chainguard-dev/wolfi-os/compare/main...$GH_USER:wolfi-os:$branch?expand=1"
 	echo
 }
 
@@ -173,7 +173,7 @@ function wolfi-sdk() {
 	_wolfi-latest
 	if ! grep -qs "^dev-container:" Makefile 2>/dev/null; then
 	       wolfi-source
-	       cd wolfi-dev/os
+	       cd wolfi-os
 	fi
 	mkdir -p $HOME/tmp
 	mkdir -p packages
@@ -187,20 +187,20 @@ function wolfi-shell() {
 }
 
 function wolfi-source() {
-	local os_url="git@github.com:wolfi-dev/os.git"
+	local os_url="git@github.com:chainguard-dev/wolfi-os.git"
 	local images_url="git@github.com:chainguard-dev/images.git"
+	local images_private_url="git@github.com:chainguard-images/images-private.git"
 	local dir="$(wolfi-sandbox)"
-	mkdir -p "$dir/github.com/wolfi-dev/"
-	cd "$dir/github.com/wolfi-dev/"
-	git clone "$os_url" os
-	mkdir -p os/packages
-	cd "$dir/github.com/wolfi-dev/os"
+	mkdir -p "$dir/github.com/"
+	cd "$dir/github.com/"
+	git clone "$os_url" wolfi-os
+	mkdir -p wolfi-os/packages
+	cd "$dir/github.com/wolfi-os"
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
-	mkdir -p "$dir/github.com/chainguard-dev"
-	cd "$dir/github.com/chainguard-dev"
+	cd "$dir/github.com/"
 	git clone "$images_url" images
-	cd "$dir"/github.com
-	info "You now have a clean clone of wolfi-dev/os and chainguard-dev/images"
+	git clone "$images_private_url" images-private
+	info "You now have clean clones of wolfi-os, images, and images-private"
 }
 
 function wolfi-image() {
@@ -234,8 +234,8 @@ function wolfi-convert-alpine() {
 	done
 	[ -z "$url" ] && error "Alpine package not found [$pkg]" && return 1
 	if [ -e "$pkg".yaml ]; then
-		if wget -q -O/dev/null "https://github.com/wolfi-dev/os/blob/main/$pkg.yaml"; then
-			error "$pkg.yaml already exists at https://github.com/wolfi-dev/os/blob/main/$pkg.yaml" && return 1
+		if wget -q -O/dev/null "https://github.com/chainguard-dev/wolfi-os/blob/main/$pkg.yaml"; then
+			error "$pkg.yaml already exists at https://github.com/chainguard-dev/wolfi-os/blob/main/$pkg.yaml" && return 1
 		fi
 	fi
 	wolfi-branch "$1"
@@ -283,27 +283,37 @@ function wolfi-count-tests() {
 	grep "^test:" *.yaml | wc -l
 }
 
+function wolfi-count-images() {
+	grep -ri "source:.*cgr.dev" | sed -e "s:.*/::" -e "s/:.*//" | sort -u | wc -l
+}
+
 function wolfi-numbers() {
 	local years=$(seq 2023 2024)
 	local months=$(seq -w 1 12)
 	local today=$(date +%Y%m%d)
-	local y= m= t= s= b= p= l= g=
-	wolfi-sandbox
-	git clone git@github.com:chainguard-dev/wolfi-os
-	cd wolfi-os
-	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS	TESTS"
-	for y in $years; do
-		for m in $months; do
-			t="$y-$m-01"
-			[ $(echo "$t" | sed -e "s/-//g") -gt "$today" ] && break
-			git checkout `git rev-list -n 1 --before="$t" main` >/dev/null 2>&1
-			s=$(wolfi-count-source)
-			b=$(wolfi-count-binary)
-			p=$(wolfi-count-patches)
-			l=$(wolfi-count-yaml-lines)
-			g=$(wolfi-count-commits)
+	local year= month= timestamp= src= bin= patches= lines= commits= tests= images=
+	wolfi-source
+	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS	TESTS	IMAGES"
+	for year in $years; do
+		for month in $months; do
+			timestamp="$year-$month-01"
+			[ $(echo "$timestamp" | sed -e "s/-//g") -gt "$today" ] && break
+			cd wolfi-os
+			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
+			src=$(wolfi-count-source)
+			bin=$(wolfi-count-binary)
+			patches=$(wolfi-count-patches)
+			lines=$(wolfi-count-yaml-lines)
+			commits=$(wolfi-count-commits)
 			tests=$(wolfi-count-tests)
-			echo "$t	$s	$b	$p	$l	$g	$tests"
+			cd ../images
+			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
+			cd ../images-private
+			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
+			images=$(wolfi-count-images)
+			cd ..
+
+			echo "$timestamp	$src	$bin	$patches	$lines	$commits	$tests	$images"
 		done
 	done
 }
