@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# Setup a Chainguard Workstation to use a squid caching proxy on localhost for downloads
+# Use SSL Bumping to handle https traffic
+# Largely inspired by: https://rasika90.medium.com/how-i-saved-tons-of-gbs-with-https-caching-41550b4ada8a
+
+SQUID_DIR=/tmp/squid
+CERTS_DIR=/etc/ssl/certs
+
+# Install squid and openssl
+apk update
+apk add squid openssl
+mkdir -p $SQUID_DIR
+chmod 700 $SQUID_DIR
+chown -R nobody $SQUID_DIR
+
+# Initialize cert db
+/usr/libexec/security_file_certgen -c -s $SQUID_DIR/ssl_db -M 100
+
+# Generate our self-signed SSL certs
+cd $CERTS_DIR
+openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -extensions v3_ca -keyout squid-self-signed.key -out squid-self-signed.crt -subj "/C=US/ST=Chain/L=Guard/O=Eng/CN=localhost"
+
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+
+# Setup curl config
+mv -f $HOME/.curlrc $HOME/.curlrc.$TIMESTAMP
+cat >$HOME/.curlrc <<EOF
+proxy=127.0.0.1:3128
+cacert=$CERTS_DIR/squid-self-signed.pem
+EOF
+
+# Setup wget config
+mv -f $HOME/.wgetrc $HOME/.wgetrc.$TIMESTAMP
+cat >$HOME/.wgetrc <<EOF
+use_proxy=yes
+http_proxy=127.0.0.1:3128
+https_proxy=127.0.0.1:3128
+ca_certificate=$CERTS_DIR/squid-self-signed.pem
+EOF
+
+# Setup pip config
+mkdir -p $HOME/.config/pip
+mv -f $HOME/.config/pip/pip.conf $HOME/.config/pip/pip.conf.$TIMESTAMP
+cat >$HOME/.config/pip/pip.conf <<EOF
+[global]
+proxy = 127.0.0.1:3128
+cert = $CERTS_DIR/squid-self-signed.pem
+EOF
+
+# Setup openssl config
+cp -a /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf.$TIMESTAMP
+sed -i -e '/^keyUsage = cRLSign, keyCertSign/d' -e 's/^\[ v3_ca \]/\[ v3_ca \]\nkeyUsage = cRLSign, keyCertSign/' /etc/ssl/openssl.cnf
+
+
+# Setup squid config
+mv -f /etc/squid.conf /etc/squid.conf.$TIMESTAMP
+cat >/etc/squid.conf <<EOF
+acl intermediate_fetching transaction_initiator certificate-fetching
+http_access allow intermediate_fetching
+acl localnet src 127.0.0.1/32
+acl SSL_ports port 443
+acl Safe_ports port 80
+acl Safe_ports port 21
+acl Safe_ports port 443
+acl Safe_ports port 1025-65535
+acl Safe_ports port 777
+acl CONNECT method CONNECT
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localhost manager
+http_access deny manager
+http_access allow localhost
+http_access deny to_localhost
+http_access deny to_linklocal
+http_access deny all
+http_port 3128 tcpkeepalive=60,30,3 ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=20MB tls-cert=$CERTS_DIR/squid-self-signed.crt tls-key=$CERTS_DIR/squid-self-signed.key cipher=HIGH:MEDIUM:!LOW:!RC4:!SEED:!IDEA:!3DES:!MD5:!EXP:!PSK:!DSS options=NO_TLSv1,NO_SSLv3,SINGLE_DH_USE,SINGLE_ECDH_USE tls-dh=prime256v1:$CERTS_DIR/squid-self-signed_dhparam.pem
+sslcrtd_program /usr/libexec/security_file_certgen -s $SQUID_DIR/ssl_db -M 100MB
+sslcrtd_children 5
+ssl_bump server-first all
+ssl_bump stare all
+sslproxy_cert_error deny all
+coredump_dir $SQUID_DIR
+maximum_object_size 6 GB
+cache_mem 8192 MB
+cache_dir ufs $SQUID_DIR 32000 16 256
+access_log $SQUID_DIR/squid.log
+refresh_pattern -i .(jar|zip|whl|gz|bz)  259200 20% 259200 ignore-reload ignore-no-store ignore-private override-expire
+refresh_pattern .  0 20% 4320
+EOF
