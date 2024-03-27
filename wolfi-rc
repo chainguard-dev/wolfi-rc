@@ -107,6 +107,7 @@ function _wolfi-check-deps() {
 	if [ "$UNAMEO" != "Darwin" ]; then
 		groups | grep -q docker || newgrp docker
 	fi
+	mkdir -p $HOME/tmp
 }
 
 _wolfi-check-deps
@@ -119,7 +120,11 @@ function wolfi-branch() {
 	wolfi-sandbox
 	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
 	cd wolfi-os
-	git switch "$branch"
+	if ! git switch "$branch"; then
+		git branch "$branch"
+		git switch "$branch"
+		git push --set-upstream origin $branch
+	fi
 	# Sync fork to wolfi-dev/os and update github
 	git remote add upstream git@github.com:chainguard-dev/wolfi-os
 	git fetch upstream
@@ -227,6 +232,7 @@ function wolfi-yaml() {
 function wolfi-convert-alpine() {
 	local pkg="$1" i='' url=''
 	[ -z "$pkg" ] && error "Specific Alpine package to convert" && return 1
+	wolfi-sandbox
 	for i in main community; do
 		if wget -q -O/dev/null "https://git.alpinelinux.org/aports/plain/$i/$pkg/APKBUILD"; then
 			url=https://git.alpinelinux.org/aports/plain/$i/%s/APKBUILD
