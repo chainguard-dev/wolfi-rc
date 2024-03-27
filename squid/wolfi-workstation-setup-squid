@@ -5,8 +5,12 @@ set -e
 # Setup a Chainguard Workstation to use a squid caching proxy on localhost for downloads
 # Use SSL Bumping to handle https traffic
 # Largely inspired by: https://rasika90.medium.com/how-i-saved-tons-of-gbs-with-https-caching-41550b4ada8a
+# This script should be idempotent
 
+# Specify a directory for squid's caching and logs
+# Here, we're using /tmp because that's mounted as tmpfs (memory) on the workstations
 SQUID_DIR=/tmp/squid
+# We could probably move these squid certs outside of /etc ...
 CERTS_DIR=/etc/ssl/certs
 
 # Install squid and openssl
@@ -15,7 +19,7 @@ sudo apk add squid openssl ca-certificates
 sudo rm -rf $SQUID_DIR
 mkdir -p $SQUID_DIR
 
-# Initialize cert db
+# Initialize cert db at 100MB, which should hold 25K certificates
 /usr/libexec/security_file_certgen -c -s $SQUID_DIR/ssl_db -M 100
 
 # Generate our self-signed SSL certs
@@ -31,6 +35,12 @@ sudo openssl dhparam -outform PEM -out squid-self-signed_dhparam.pem 2048
 sudo cp -f squid-self-signed.pem squid-self-signed.crt
 sudo update-ca-certificates
 
+# Configure local applications to use an http proxy on localhost:127.0.0.1
+# This means that each workstation would be a caching proxy for itself
+# Alternatively, we could setup one squid server for all of the workstations to use and share,
+# in which case, we'd point all of these configurations to that one shared caching proxy
+
+# Grab a timestamp, which we'll use for backing up any configuration files we regenerate
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 
 # Setup curl config
@@ -103,5 +113,6 @@ sudo chmod 700 $SQUID_DIR
 sudo chown -R nobody $SQUID_DIR
 sudo squid -f $SQUID_DIR/squid.conf -z
 
-# Launch squid (will drop privileges and background itself)
+# Launch squid (will drop privileges and run as "nobody")
+# -N runs it in the foreground; remove -N and it will background itself
 sudo squid -f $SQUID_DIR/squid.conf -N
