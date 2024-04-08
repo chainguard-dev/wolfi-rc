@@ -105,7 +105,10 @@ function _wolfi-check-deps() {
 	fi
 	export TERRAFORM=$(command -v terraform)
 	if [ "$UNAMEO" != "Darwin" ]; then
-		groups | grep -q docker || newgrp docker
+		if ! groups | grep -q docker; then
+			sudo usermod -a -G docker $USER
+			newgrp docker
+		fi
 	fi
 	mkdir -p $HOME/tmp
 }
