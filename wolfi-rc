@@ -116,24 +116,29 @@ function _wolfi-check-deps() {
 _wolfi-check-deps
 
 function wolfi-branch() {
+	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
 	local branch="$1"
 	[ -z "$branch" ] && error "You must specify a branch name" && return
-	local url="git@github.com:$GH_USER/wolfi-os.git"
-	[ -z "$GH_USER" ] && error "You must set GH_USER to your github username" && return
-	wolfi-sandbox
-	git clone "$url" wolfi-os || error "Ensure that your fork is named 'wolfi-os'"
-	cd wolfi-os
+	[ -z "$2" ] && local url="git@github.com:$GH_USER/wolfi-os" || local url="$2"
+	local project=$(echo "$url" | sed -e "s:.*/::")
+	wolfi-sandbox "$project"-"$branch"
+	git clone "$url" $project || error "Ensure that your fork is named 'wolfi-os' or 'enterprise-packages'"
+	cd $project
 	if ! git switch "$branch"; then
 		git branch "$branch"
 		git switch "$branch"
 		git push --set-upstream origin $branch
 	fi
-	# Sync fork to wolfi-dev/os and update github
-	git remote add upstream git@github.com:chainguard-dev/wolfi-os
+	# Sync forks and update github
+	git remote add upstream git@github.com:chainguard-dev/$project
 	git fetch upstream
 	git merge upstream/main
-	git remote set-url origin git@github.com:$GH_USER/wolfi-os.git
+	git remote set-url origin git@github.com:$GH_USER/$project
 	git push
+}
+
+function wolfi-branch-enterprise() {
+	wolfi-branch $1 git@github.com:chainguard-dev/enterprise-packages
 }
 
 function wolfi-grype() {
@@ -165,14 +170,15 @@ function wolfi-pr() {
 	[ "$?" != 0 ] && error "Something wrong with your local git repository" && return 1
 	[ "$diff" -gt 0 ] && error "Uncommitted changes; see 'git diff -a'" && return 1
 	local branch=$(git branch --show-current)
+	local project=$(git config --get remote.origin.url | sed -e "s:.*/::" -e "s:\.git$::")
 	echo
 	echo "Open to submit pull request:"
-	echo " - https://github.com/chainguard-dev/wolfi-os/compare/main...$GH_USER:wolfi-os:$branch?expand=1"
+	echo " - https://github.com/chainguard-dev/$project/compare/main...$GH_USER:$project:$branch?expand=1"
 	echo
 }
 
 function wolfi-sandbox() {
-	local d=$(mktemp -d /tmp/wolfi-$(date +%Y%m%d-%H%M%S)-XXXXXXXX)
+	local d=$(mktemp -d /tmp/wolfi-$(date +%Y%m%d-%H%M%S)-"$1"-XXX)
 	cd "$d"
 	echo "$d"
 }
@@ -196,19 +202,21 @@ function wolfi-shell() {
 
 function wolfi-source() {
 	local os_url="git@github.com:chainguard-dev/wolfi-os.git"
+	local enterprise_url="git@github.com:chainguard-dev/enterprise-packages.git"
 	local images_url="git@github.com:chainguard-dev/images.git"
 	local images_private_url="git@github.com:chainguard-images/images-private.git"
 	local dir="$(wolfi-sandbox)"
 	mkdir -p "$dir/github.com/"
 	cd "$dir/github.com/"
 	git clone "$os_url" wolfi-os
+	git clone "$enterprise_url" enterprise-packages
 	mkdir -p wolfi-os/packages
 	cd "$dir/github.com/wolfi-os"
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	cd "$dir/github.com/"
 	git clone "$images_url" images
 	git clone "$images_private_url" images-private
-	info "You now have clean clones of wolfi-os, images, and images-private"
+	info "You now have clean clones of wolfi-os, enterprise-packages, images, and images-private"
 }
 
 function wolfi-image() {
