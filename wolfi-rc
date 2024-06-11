@@ -212,7 +212,7 @@ function _chainctl-auth() {
 function chainguard-shell() {
 	_wolfi-latest
 	_chainctl-auth
-	docker run --rm -it $DOCKER_RUN_OPTS -e "HTTP_AUTH=basic:apk.cgr.dev:user:$(chainctl auth token --audience apk.cgr.dev)" cgr.dev/chainguard-private/chainguard-base:latest "$@"
+	docker run --rm -it $DOCKER_RUN_OPTS -e "HTTP_AUTH=basic:apk.cgr.dev:user:$(chainctl auth token --audience apk.cgr.dev)" cgr.dev/chainguard-private/chainguard-base:latest sh -c "apk add curl && curl -o /etc/apk/keys/latest.rsa.pub https://apk.cgr.dev/chainguard/latest.rsa.pub && /bin/echo 'https://apk.cgr.dev/chainguard-private' >> /etc/apk/repositories && /bin/sh -l"
 }
 
 function wolfi-source() {
