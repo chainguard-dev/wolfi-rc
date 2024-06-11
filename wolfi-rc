@@ -81,6 +81,7 @@ function _wolfi-check-deps() {
 		type melange 2>&1 >/dev/null || brew install melange
 		type terraform 2>&1 >/dev/null || brew install terraform
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
+		type chainctl 2>&1 >/dev/null || (xcode-select --install && brew tap chainguard-dev/tap && brew install chainctl)
 	elif [ "$NAME" = "Wolfi" ]; then
 		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
@@ -90,6 +91,7 @@ function _wolfi-check-deps() {
 		type melange 2>&1 >/dev/null || sudo apk add melange
 		type terraform 2>&1 >/dev/null || sudo apk add terraform
 		type yam 2>&1 >/dev/null || sudo apk add yam
+		type chainctl 2>&1 >/dev/null || sudo apk add chainctl
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		type go 2>&1 >/dev/null || sudo snap install go --classic
 		type git 2>&1 >/dev/null || sudo apt install git
@@ -98,6 +100,7 @@ function _wolfi-check-deps() {
 		type melange 2>&1 >/dev/null || go install chainguard.dev/melange@latest
 		type terraform 2>&1 >/dev/null || go install github.com/hashicorp/terraform@latest
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
+		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')")
 	else
 		echo "$NAME"
 		echo "Running on an unsupported OS"
