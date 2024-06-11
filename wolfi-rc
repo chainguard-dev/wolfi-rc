@@ -200,6 +200,18 @@ function wolfi-shell() {
 	docker run --rm -it $DOCKER_RUN_OPTS cgr.dev/chainguard/wolfi-base:latest "$@"
 }
 
+function _chainctl-auth() {
+	chainctl auth status >/dev/null || chainctl auth login --headless
+	docker image pull cgr.dev/chainguard-private/chainguard-base:latest >/dev/null 2>&1 || chainctl auth configure-docker --headless
+	chainctl auth token --audience apk.cgr.dev >/dev/null 2>&1 || chainctl auth login --headless --audience apk.cgr.dev
+}
+
+function chainguard-shell() {
+	_wolfi-latest
+	_chainctl-auth
+	docker run --rm -it $DOCKER_RUN_OPTS -e "HTTP_AUTH=basic:apk.cgr.dev:user:$(chainctl auth token --audience apk.cgr.dev)" cgr.dev/chainguard-private/chainguard-base:latest "$@"
+}
+
 function wolfi-source() {
 	local os_url="git@github.com:chainguard-dev/wolfi-os.git"
 	local enterprise_url="git@github.com:chainguard-dev/enterprise-packages.git"
