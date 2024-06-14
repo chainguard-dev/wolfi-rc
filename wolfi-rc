@@ -98,6 +98,7 @@ function _wolfi-check-deps() {
 		type docker 2>&1 >/dev/null || (sudo apt install docker.io && sudo usermod -a -G docker $USER)
 		type make 2>&1 >/dev/null || sudo apt install make
 		type melange 2>&1 >/dev/null || go install chainguard.dev/melange@latest
+		type apko 2>&1 >/dev/null || go install chainguard.dev/apko@latest
 		type terraform 2>&1 >/dev/null || go install github.com/hashicorp/terraform@latest
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')")
