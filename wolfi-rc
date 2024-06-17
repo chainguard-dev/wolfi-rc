@@ -358,3 +358,40 @@ function wolfi-numbers() {
 		done
 	done
 }
+
+# Function to check if an epoch value in a YAML file has been incremented by 1
+function check_epoch_increment() {
+    local file=$1
+
+    # Get the current epoch value from the staging area (index)
+    current_epoch=$(grep -E 'epoch:' "$file" | awk '{print $2}')
+    
+    # Get the previous epoch value from the last committed version of the file
+    previous_epoch=$(git show HEAD:"$file" | grep -E 'epoch:' | awk '{print $2}')
+
+    # Check if both current and previous epoch values are integers
+    if [[ $current_epoch =~ ^[0-9]+$ ]] && [[ $previous_epoch =~ ^[0-9]+$ ]]; then
+        # Check if the current epoch is exactly 1 more than the previous epoch
+        if [[ $((previous_epoch + 1)) -ne $current_epoch ]]; then
+            echo "Error: The epoch value in $file has not been incremented by 1."
+            return 1
+        fi
+    else
+        echo "Error: Invalid epoch values in $file."
+        return 1
+    fi
+    return 0
+}
+
+function wolfi-epoch() {
+	# Get the list of modified YAML files in the staging area
+	modified_files=$(git diff --cached --name-only --diff-filter=AM | grep '\.yaml$')
+
+	# Check each modified YAML file
+	for file in $modified_files; do
+		if ! check_epoch_increment "$file"; then
+			echo "Pre-commit hook failed. Please increment the epoch value by 1 in $file."
+			exit 1
+		fi
+	done
+}
