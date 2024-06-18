@@ -77,12 +77,12 @@ function _wolfi-check-deps() {
 		type go 2>&1 >/dev/null || brew install go
 		type git 2>&1 >/dev/null || brew install git
 		type gitsign 2>&1 >/dev/null || brew install sigstore/tap/gitsign
-		type docker 2>&1 >/dev/null || brew install docker
+		type docker 2>&1 >/dev/null || brew install --cask docker
 		type make 2>&1 >/dev/null || brew install make
 		type melange 2>&1 >/dev/null || brew install melange
 		type terraform 2>&1 >/dev/null || brew install terraform
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
-		type chainctl 2>&1 >/dev/null || (xcode-select --install && brew tap chainguard-dev/tap && brew install chainctl)
+		type chainctl 2>&1 >/dev/null || (brew tap chainguard-dev/tap && brew install chainctl)
 	elif [ "$NAME" = "Wolfi" ]; then
 		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
