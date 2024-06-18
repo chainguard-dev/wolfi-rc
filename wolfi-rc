@@ -136,21 +136,24 @@ function wolfi-branch() {
 	wolfi-sandbox "$project"-"$branch"
 	git clone "$url" $project || error "Ensure that your fork is named 'wolfi-os' or 'enterprise-packages'"
 	cd $project
+	git checkout main
+	# Sync forks and update github
+	git remote add upstream git@github.com:chainguard-dev/$project
+	git pull upstream main
 	if ! git switch "$branch"; then
 		git branch "$branch"
 		git switch "$branch"
-		git push --set-upstream origin $branch
 	fi
-	# Sync forks and update github
-	git remote add upstream git@github.com:chainguard-dev/$project
-	git fetch upstream
-	git merge upstream/main
-	git remote set-url origin git@github.com:$GH_USER/$project
+	git checkout main
+	git pull upstream main
+	git checkout "$branch"
+	git rebase main
+	git push --set-upstream origin $branch
 	git push
 }
 
 function wolfi-branch-enterprise() {
-	wolfi-branch $1 git@github.com:chainguard-dev/enterprise-packages
+	wolfi-branch $1 git@github.com:$GH_USER/enterprise-packages
 }
 
 function wolfi-grype() {
