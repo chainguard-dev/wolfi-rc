@@ -422,8 +422,8 @@ function wolfi-lastbuilt() {
 
 # Friendly summary of lastchanged and lastbuilt
 function wolfi-changesummary() {
-	echo "last changed: $(lastchanged $1)"
-	echo "last built:   $(lastbuilt $1)"
+	echo "last changed: $(wolfi-lastchanged $1)"
+	echo "last built:   $(wolfi-lastbuilt $1)"
 }
 
 # Note: the following functions (wolfi-cdiff-fs through wolfi-ccat) were
