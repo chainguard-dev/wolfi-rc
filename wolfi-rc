@@ -37,15 +37,15 @@ they do...
  - wolfi-source: Get the current Wolfi OS and Images source code, in a new wolfi-sandbox directory
  - wolfi-work: start your workstation and ssh to it
  - wolfi-yam: Reformat yaml to Wolfi specifications
- - lastchanged: The last time an APK inside a Chainguard image was updated
- - lastbuilt: The last time a Chainguard image was built (signed) even if contents have not changed
- - changesummary: Friendly summary of lastchanged and lastbuilt
- - cdiff-fs: Diff two image filesystems
- - cdiff-cfg: Diff two image configs
- - cdiff-mf: Diff two image manifests
- - imgsize: Get image size
- - cls: List files in image
- - ccat: Cat file in image
+ - wolfi-lastchanged: The last time an APK inside a Chainguard image was updated
+ - wolfi-lastbuilt: The last time a Chainguard image was built (signed) even if contents have not changed
+ - wolfi-changesummary: Friendly summary of lastchanged and lastbuilt
+ - wolfi-cdiff-fs: Diff two image filesystems
+ - wolfi-cdiff-cfg: Diff two image configs
+ - wolfi-cdiff-mf: Diff two image manifests
+ - wolfi-imgsize: Get image size
+ - wolfi-cls: List files in image
+ - wolfi-ccat: Cat file in image
 "
 
 type vim 2>/dev/null 1>&2 && alias vi=vim
@@ -409,59 +409,59 @@ function wolfi-epoch() {
 }
 
 # The last time an APK inside a Chainguard image was updated
-function lastchanged() {
+function wolfi-lastchanged() {
 	crane config $1 | jq -r '.created'
 }
 
 # The last time a Chainguard image was built (signed) even if contents have not changed
-function lastbuilt() {
+function wolfi-lastbuilt() {
 	cosign verify $1 --certificate-identity-regexp=.* --certificate-oidc-issuer-regexp=.* 2>/dev/null | \
 		jq -r '.[0].optional.Bundle.Payload.integratedTime' | \
 		TZ=UTC xargs python3 -c 'import datetime,sys;print(datetime.datetime.fromtimestamp(int(sys.argv[1])).strftime("%Y-%m-%dT%H:%M:%SZ"))'
 }
 
 # Friendly summary of lastchanged and lastbuilt
-function changesummary() {
+function wolfi-changesummary() {
 	echo "last changed: $(lastchanged $1)"
 	echo "last built:   $(lastbuilt $1)"
 }
 
-# Note: the following functions (cdiff-fs through ccat) were originally
-# found in @imjasonh's "image inspection helpers" gist here:
+# Note: the following functions (wolfi-cdiff-fs through wolfi-ccat) were
+# originally found in @imjasonh's "image inspection helpers" gist here:
 # https://gist.github.com/imjasonh/ce437a40160acab17030d024d4680fd2
 
 # Diff two image filesystems
-function cdiff-fs() {
+function wolfi-cdiff-fs() {
 	diff \
 		<(crane export $1 - --platform ${3:-linux/amd64} | tar -tvf - | sort) \
 		<(crane export $2 - --platform ${3:-linux/amd64} | tar -tvf - | sort)
 }
 
 # Diff two image configs
-function cdiff-cfg() {
+function wolfi-cdiff-cfg() {
 	diff \
 		<(crane config $1 --platform ${3:-linux/amd64} | jq) \
 		<(crane config $2 --platform ${3:-linux/amd64} | jq)
 }
 
 # Diff two image manifests
-function cdiff-mf() {
+function wolfi-cdiff-mf() {
 	diff \
 		<(crane manifest $1 --platform ${3:-linux/amd64} | jq) \
 		<(crane manifest $2 --platform ${3:-linux/amd64} | jq)
 }
 
 # Get image size
-function imgsize() {
+function wolfi-imgsize() {
 	crane manifest $1 --platform ${2:-linux/amd64} | jq '.config.size + ([.layers[].size] | add)' | numfmt --to=iec
 }
 
 # List files in image
-function cls() {
+function wolfi-cls() {
 	crane export $1 --platform ${2:-linux/amd64} | tar -tvf -
 }
 
 # Cat file in image
-function ccat() {
+function wolfi-ccat() {
 	crane export $1 --platform ${3:-linux/amd64} - | tar -Oxf - $2
 }
