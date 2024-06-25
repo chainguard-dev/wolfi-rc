@@ -19,6 +19,7 @@
 # Simple maintainer script to update the README.md with the help text from the wolfi-rc itself
 # in the interest of keeping the two in sync
 
-sed -i -n '/^## wolfi-rc commands/q;p' README.md
+# Note: a .tmp file used here since the sed -i flag does not work properly on macOS
+sed -n '/^## wolfi-rc commands/q;p' README.md > README.md.tmp && mv README.md.tmp README.md
 
 grep -A99999 "^## wolfi-rc commands" wolfi-rc | grep -B99999 -m1  "^\"" | grep -v "^\"$" >> README.md
