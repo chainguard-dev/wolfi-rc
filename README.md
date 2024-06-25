@@ -37,3 +37,12 @@ they do...
  - wolfi-source: Get the current Wolfi OS and Images source code, in a new wolfi-sandbox directory
  - wolfi-work: start your workstation and ssh to it
  - wolfi-yam: Reformat yaml to Wolfi specifications
+ - lastchanged: The last time an APK inside a Chainguard image was updated
+ - lastbuilt: The last time a Chainguard image was built (signed) even if contents have not changed
+ - changesummary: Friendly summary of lastchanged and lastbuilt
+ - cdiff-fs: Diff two image filesystems
+ - cdiff-cfg: Diff two image configs
+ - cdiff-mf: Diff two image manifests
+ - imgsize: Get image size
+ - cls: List files in image
+ - ccat: Cat file in image
