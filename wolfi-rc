@@ -97,7 +97,7 @@ function _wolfi-check-deps() {
 		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
 		type git 2>&1 >/dev/null || sudo apk add git
-		type gitsign 2>&1 >/dev/null || sudo apk add gitsign
+		#type gitsign 2>&1 >/dev/null || sudo apk add gitsign
 		type docker 2>&1 >/dev/null || (sudo apk add docker && usermod -a -G docker $USER)
 		type make 2>&1 >/dev/null || sudo apk add make
 		type melange 2>&1 >/dev/null || sudo apk add melange
@@ -108,7 +108,7 @@ function _wolfi-check-deps() {
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		type go 2>&1 >/dev/null || sudo snap install go --classic
 		type git 2>&1 >/dev/null || sudo apt install git
-		type gitsign 2>&1 >/dev/null || go install github.com/sigstore/gitsign@latest
+		#type gitsign 2>&1 >/dev/null || go install github.com/sigstore/gitsign@latest
 		type docker 2>&1 >/dev/null || (sudo apt install docker.io && sudo usermod -a -G docker $USER)
 		type make 2>&1 >/dev/null || sudo apt install make
 		type melange 2>&1 >/dev/null || go install chainguard.dev/melange@latest
@@ -133,8 +133,8 @@ function _wolfi-check-deps() {
 	# Setup signed commits
 	git config --global commit.gpgsign true  # Sign all commits
 	git config --global tag.gpgsign true  # Sign all tags
-	git config --global gpg.x509.program gitsign  # Use gitsign for signing
-	git config --global gpg.format x509  # gitsign expects x509 args
+	#git config --global gpg.x509.program gitsign  # Use gitsign for signing
+	#git config --global gpg.format x509  # gitsign expects x509 args
 }
 
 _wolfi-check-deps
