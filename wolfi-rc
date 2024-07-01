@@ -116,7 +116,7 @@ function _wolfi-check-deps() {
 		type terraform 2>&1 >/dev/null || go install github.com/hashicorp/terraform@latest
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type curl 2>&1 >/dev/null || sudo apt install curl
-		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')")
+		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')" && chmod +x ~/bin/chainctl)
 	else
 		echo "$NAME"
 		echo "Running on an unsupported OS"
@@ -228,6 +228,8 @@ function wolfi-shell() {
 }
 
 function _chainctl-auth() {
+	chainctl config set default.use-refresh-token true
+	chainctl config set auth.mode headless
 	chainctl auth status >/dev/null || chainctl auth login --headless
 	docker image pull cgr.dev/chainguard-private/chainguard-base:latest >/dev/null 2>&1 || chainctl auth configure-docker --headless
 	chainctl auth token --audience apk.cgr.dev >/dev/null 2>&1 || chainctl auth login --headless --audience apk.cgr.dev
