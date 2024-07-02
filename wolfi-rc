@@ -222,7 +222,7 @@ function wolfi-shell() {
 function _chainctl-auth() {
 	chainctl config set default.use-refresh-token true
 	chainctl config set auth.mode headless
-	chainctl auth status >/dev/null || chainctl auth login --headless
+	chainctl auth status --quick >/dev/null || chainctl auth login --headless
 	docker image pull cgr.dev/chainguard-private/chainguard-base:latest >/dev/null 2>&1 || chainctl auth configure-docker --headless
 	chainctl auth token --audience apk.cgr.dev >/dev/null 2>&1 || chainctl auth login --headless --audience apk.cgr.dev
 }
