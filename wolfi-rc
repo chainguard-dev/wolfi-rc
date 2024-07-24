@@ -92,6 +92,7 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type curl 2>&1 >/dev/null || brew install curl
 		type chainctl 2>&1 >/dev/null || (brew tap chainguard-dev/tap && brew install chainctl)
+		type dive 2>&1 >/dev/null || brew install dive
 	elif [ "$NAME" = "Wolfi" ]; then
 		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
@@ -103,6 +104,7 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || sudo apk add yam
 		type curl 2>&1 >/dev/null || sudo apk add curl
 		type chainctl 2>&1 >/dev/null || sudo apk add chainctl
+		type dive 2>&1 >/dev/null || sudo apk add dive
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		type go 2>&1 >/dev/null || sudo snap install go --classic
 		type git 2>&1 >/dev/null || sudo apt install git
@@ -114,6 +116,7 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type curl 2>&1 >/dev/null || sudo apt install curl
 		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')" && chmod +x ~/bin/chainctl)
+		type dive 2>&1 >/dev/null || go install github.com/wagoodman/dive@latest
 	else
 		echo "$NAME"
 		echo "Running on an unsupported OS"
