@@ -77,7 +77,8 @@ function wolfi-help() {
 }
 
 function _wolfi-check-deps() {
-	(echo "$PATH" | grep -qs "PATH.*go/bin") || export PATH="$PATH:$HOME/go/bin"
+	(echo "$PATH" | grep -qs "$HOME/go/bin") || export PATH="$PATH:$HOME/go/bin"
+	(echo "$PATH" | grep -qs "$HOME/bin") || export PATH="$PATH:$HOME/bin"
 	UNAMEO=$(uname -o)
 	if [ "$UNAMEO" != "Darwin" ]; then
 		. /etc/os-release
@@ -92,6 +93,8 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type curl 2>&1 >/dev/null || brew install curl
 		type chainctl 2>&1 >/dev/null || (brew tap chainguard-dev/tap && brew install chainctl)
+		type jq 2>&1 >/dev/null || brew install jq
+		type unzip 2>&1 >/dev/null || brew install unzip
 	elif [ "$NAME" = "Wolfi" ]; then
 		type sudo 2>&1 >/dev/null || apk add sudo-rs
 		type go 2>&1 >/dev/null || sudo apk add go
@@ -103,6 +106,8 @@ function _wolfi-check-deps() {
 		type yam 2>&1 >/dev/null || sudo apk add yam
 		type curl 2>&1 >/dev/null || sudo apk add curl
 		type chainctl 2>&1 >/dev/null || sudo apk add chainctl
+		type jq 2>&1 >/dev/null || sudo apk add jq
+		type unzip 2>&1 >/dev/null || sudo apk add unzip
 	elif [ "$NAME" = "Ubuntu" ] || [ "$NAME" = "Debian GNU/Linux" ]; then
 		type go 2>&1 >/dev/null || sudo snap install go --classic
 		type git 2>&1 >/dev/null || sudo apt install git
@@ -110,9 +115,11 @@ function _wolfi-check-deps() {
 		type make 2>&1 >/dev/null || sudo apt install make
 		type melange 2>&1 >/dev/null || go install chainguard.dev/melange@latest
 		type apko 2>&1 >/dev/null || go install chainguard.dev/apko@latest
-		type terraform 2>&1 >/dev/null || go install github.com/hashicorp/terraform@latest
-		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type curl 2>&1 >/dev/null || sudo apt install curl
+		type jq 2>&1 >/dev/null || sudo apt install jq
+		type unzip 2>&1 >/dev/null || sudo apt install unzip
+		type terraform 2>&1 >/dev/null || (mkdir -p ~/bin && terraform_latest_version=$(curl --silent "https://api.github.com/repos/hashicorp/terraform/releases/latest" | jq -r '.tag_name' | sed 's/v//') && curl -o ~/bin/terraform_${terraform_latest_version}.zip "https://releases.hashicorp.com/terraform/${terraform_latest_version}/terraform_${terraform_latest_version}_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/').zip" && unzip -o ~/bin/terraform_${terraform_latest_version}.zip -d ~/bin && chmod +x ~/bin/terraform)
+		type yam 2>&1 >/dev/null || go install github.com/chainguard-dev/yam@latest
 		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')" && chmod +x ~/bin/chainctl)
 	else
 		echo "$NAME"
