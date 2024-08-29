@@ -197,7 +197,7 @@ function wolfi-pr() {
 }
 
 function wolfi-sandbox() {
-	local d=$(mktemp -d /tmp/wolfi-$(date +%Y%m%d-%H%M%S)-"$1"-XXX)
+	local d=$(mktemp -d /tmp/wolfi-"$1"-$(date +%Y%m%d-%H%M%S)-XXX)
 	cd "$d"
 	echo "$d"
 }
