@@ -116,9 +116,10 @@ function _wolfi-check-deps() {
 		( ! type make 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && sudo apt install make
 		( ! type melange 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install chainguard.dev/melange@latest
 		( ! type apko 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install chainguard.dev/apko@latest
-		( ! type terraform 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install github.com/hashicorp/terraform@latest
+		( ! type terraform 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && sudo snap install terraform --classic
 		( ! type yam 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install github.com/chainguard-dev/yam@latest
 		( ! type curl 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && sudo apt install curl
+		( ! type k3d 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')" && chmod +x ~/bin/chainctl)
 		[ "$FORCE" = "1" ] && chainctl update --yes
 	else
