@@ -172,6 +172,10 @@ function wolfi-branch-enterprise() {
 	wolfi-branch $1 git@github.com:$GH_USER/enterprise-packages
 }
 
+function chainguard-branch-images() {
+	wolfi-branch $1 git@github.com:$GH_USER/images-private
+}
+
 function wolfi-grype() {
 	docker pull cgr.dev/chainguard/grype:latest
 	docker run --rm -ti cgr.dev/chainguard/grype "$@"
@@ -204,7 +208,13 @@ function wolfi-pr() {
 	local project=$(git config --get remote.origin.url | sed -e "s:.*/::" -e "s:\.git$::")
 	echo
 	echo "Open to submit pull request:"
-	echo " - https://github.com/chainguard-dev/$project/compare/main...$GH_USER:$project:$branch?expand=1"
+	local owner="chainguard-dev"
+	case "$project" in
+		images-private)
+			owner="chainguard-images"
+		;;
+	esac
+	echo " - https://github.com/$owner/$project/compare/main...$GH_USER:$project:$branch?expand=1"
 	echo
 }
 
@@ -233,7 +243,9 @@ function wolfi-shell() {
 
 function _chainctl-auth() {
 	chainctl config set default.use-refresh-token true
+	chainctl config set auth.device-flow chainguard
 	chainctl config set auth.mode headless
+	chainctl config set default.social-login google-oauth2
 	#chainctl auth status --quick >/dev/null || chainctl auth login --headless
 	chainctl auth status --audience=cgr.dev --quick >/dev/null 2>&1 || chainctl auth configure-docker --headless
 	chainctl auth status --audience apk.cgr.dev --quick || chainctl auth login --headless --audience apk.cgr.dev
