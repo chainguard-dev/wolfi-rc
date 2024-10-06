@@ -48,6 +48,8 @@ they do...
  - wolfi-ccat: Cat file in image
 "
 
+export MELANGE_EXTRA_OPTS="--runner docker"
+
 type vim 2>/dev/null 1>&2 && alias vi=vim
 
 # Note: you will need to export your Google Cloud user name (mine is first-last)
@@ -118,6 +120,7 @@ function _wolfi-check-deps() {
 		( ! type apko 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install chainguard.dev/apko@latest
 		( ! type terraform 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && sudo snap install terraform --classic
 		( ! type yam 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && go install github.com/chainguard-dev/yam@latest
+		( ! type wolfictl 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && (cd $HOME/src && git clone git@github.com:wolfi-dev/wolfictl.git wolfictl && cd wolfictl && go install)
 		( ! type curl 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && sudo apt install curl
 		( ! type k3d 2>&1 >/dev/null || [ "$FORCE" = "1" ] ) && curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 		type chainctl 2>&1 >/dev/null || (mkdir -p ~/bin && curl -o ~/bin/chainctl "https://dl.enforce.dev/chainctl/latest/chainctl_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/aarch64/arm64/')" && chmod +x ~/bin/chainctl)
