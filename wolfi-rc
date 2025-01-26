@@ -263,20 +263,29 @@ function chainguard-shell() {
 function wolfi-source() {
 	local os_url="git@github.com:chainguard-dev/wolfi-os.git"
 	local enterprise_url="git@github.com:chainguard-dev/enterprise-packages.git"
+	local extras_url="git@github.com:chainguard-dev/extra-packages.git"
 	local images_url="git@github.com:chainguard-dev/images.git"
 	local images_private_url="git@github.com:chainguard-images/images-private.git"
+	local wolfi_advisories_url="git@github.com:wolfi-dev/advisories.git"
+	local enterprise_advisories_url="git@github.com:chainguard-dev/enterprise-advisories.git"
+	local extras_advisories_url="git@github.com:chainguard-dev/extras-advisories.git"
 	local dir="$(wolfi-sandbox)"
 	mkdir -p "$dir/github.com/"
 	cd "$dir/github.com/"
 	git clone "$os_url" wolfi-os
 	git clone "$enterprise_url" enterprise-packages
-	mkdir -p wolfi-os/packages
+	git clone "$extras_url" extra-packages
+	mkdir -p wolfi-os/packages enterprise-packages/packages extra-packages/packages
 	cd "$dir/github.com/wolfi-os"
 	[ -f local-melange.rsa ] || melange keygen local-melange.rsa
 	cd "$dir/github.com/"
 	git clone "$images_url" images
 	git clone "$images_private_url" images-private
-	info "You now have clean clones of wolfi-os, enterprise-packages, images, and images-private"
+	git clone "$wolfi_advisories_url" wolfi-advisories
+	git clone "$enterprise_advisories_url" enterprise-advisories
+	git clone "$extras_advisories_url" extras-advisories
+	info "You now have clean clones of the key code bases"
+	ls -halF
 }
 
 function wolfi-image() {
@@ -337,11 +346,7 @@ function wolfi-convert-alpine() {
 
 
 function wolfi-count-source() {
-	grep "^package:" *.yaml | wc -l
-}
-
-function wolfi-count-binary() {
-	grep name: *.yaml | sed -e "s/.*name: //" -e "s/\"//g" | grep -v "\s" | sort -u | wc -l
+	grep -r "^package:" . | grep "\.yaml:package:" | wc -l
 }
 
 function wolfi-count-patches() {
@@ -349,7 +354,7 @@ function wolfi-count-patches() {
 }
 
 function wolfi-count-yaml-lines() {
-	wc -l *.yaml | grep "total$" | awk '{print $1}'
+	wc -l $(find . -type f -name "*.yaml") | grep "total$" | awk '{print $1}'
 }
 
 function wolfi-count-commits() {
@@ -357,40 +362,105 @@ function wolfi-count-commits() {
 }
 
 function wolfi-count-tests() {
-	grep "^test:" *.yaml | wc -l
+	grep -ri "^test:" | wc -l
 }
 
 function wolfi-count-images() {
 	grep -ri "source:.*cgr.dev" | sed -e "s:.*/::" -e "s/:.*//" | sort -u | wc -l
 }
 
+function wolfi-count-cves() {
+	grep -r CVE- . 2>/dev/null | grep "\-advisories" | sed -e "s/.*CVE-/CVE-/" -e "s/ .*//" | sort -u | wc -l
+}
+
+function wolfi-count-advisories() {
+	grep -r " - id: " . 2>/dev/null | grep "CVE-\|GHSA-\|CGA-" | sed -e "s/^.* id: //" | sort -u | wc -l
+}
+
+function wolfi-count-version-bumps() {
+	local since="$1"
+	local until="$2"
+	local total=0 count=0
+	local r=
+	for r in wolfi-os enterprise-packages extra-packages; do
+		cd $r
+		count=$(git log --since="$since" --until="$until" | grep "^commit " | sed -e "s/.* //" | xargs -i git show {} | grep "^+  version: " | wc -l)
+		total=$((total+count))
+		cd ..
+	done
+	echo "$total"
+}
+
+function wolfi-count-epoch-bumps() {
+	local since="$1"
+	local until="$2"
+	local total=0 count=0
+	local r=
+	for r in wolfi-os enterprise-packages extra-packages; do
+		cd $r
+		count=$(git log --since="$since" --until="$until" | grep "^commit " | sed -e "s/.* //" | xargs -i git show {} | grep "^+  epoch: " | grep -v "^+  epoch: 0$" | wc -l)
+		total=$((total+count))
+		cd ..
+	done
+	echo "$total"
+}
+
+function wolfi-count-bot-commits() {
+	local since="$1"
+	local until="$2"
+	local total=0 count=0
+	local r=
+	for r in $(find . -type d -name .git | xargs -i dirname {}); do
+		cd $r
+		count=$(git log --since="$since" --until="$until" | grep "^Author: " | grep "octo-sts\|wolfi-bot" | wc -l)
+		total=$((total+count))
+		cd ..
+	done
+	echo "$total"
+}
+
+function wolfi-count-human-commits() {
+	local since="$1"
+	local until="$2"
+	local total=0 count=0
+	local r=
+	for r in $(find . -type d -name .git | xargs -i dirname {}); do
+		cd $r
+		count=$(git log --since="$since" --until="$until" | grep "^Author:" | grep -v "octo-sts" | grep -v "wolfi-bot" | wc -l)
+		total=$((total+count))
+		cd ..
+	done
+	echo "$total"
+}
 function wolfi-numbers() {
-	local years=$(seq 2023 2024)
+	local years=$(seq 2023 2025)
 	local months=$(seq -w 1 12)
 	local today=$(date +%Y%m%d)
-	local year= month= timestamp= src= bin= patches= lines= commits= tests= images=
+	local year= month= timestamp= packages= images= advisories= commit= cves=
+	local last_timestamp="1900-01-01"
 	wolfi-source
-	echo "DATE	SRC_PKGS	BIN_PKGS	PATCHES	YAML_LINES COMMITS	TESTS	IMAGES"
+	echo "DATE	PACKAGES	IMAGES	CVES	ADVISORIES	VERSION_BUMPS	EPOCH_BUMPS	OCTO_COMMITS	HUMAN_COMMITS"
 	for year in $years; do
 		for month in $months; do
 			timestamp="$year-$month-01"
 			[ $(echo "$timestamp" | sed -e "s/-//g") -gt "$today" ] && break
-			cd wolfi-os
-			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
-			src=$(wolfi-count-source)
-			bin=$(wolfi-count-binary)
-			patches=$(wolfi-count-patches)
-			lines=$(wolfi-count-yaml-lines)
-			commits=$(wolfi-count-commits)
-			tests=$(wolfi-count-tests)
-			cd ../images
-			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
-			cd ../images-private
-			git checkout `git rev-list -n 1 --before="$timestamp" main` >/dev/null 2>&1
+			for i in *; do
+				cd $i
+				commit=$(git rev-list -n 1 --before="$timestamp" main)
+				[ -z "$commit" ] && commit=$(git rev-list --max-parents=0 HEAD)
+				git checkout $commit >/dev/null 2>&1
+				cd - >/dev/null
+			done
+			packages=$(wolfi-count-source)
 			images=$(wolfi-count-images)
-			cd ..
-
-			echo "$timestamp	$src	$bin	$patches	$lines	$commits	$tests	$images"
+			cves=$(wolfi-count-cves)
+			advisories=$(wolfi-count-advisories)
+			version_bumps=$(wolfi-count-version-bumps $last_timestamp $timestamp)
+			epoch_bumps=$(wolfi-count-epoch-bumps $last_timestamp $timestamp)
+			bot_commits=$(wolfi-count-bot-commits $last_timestamp $timestamp)
+			human_commits=$(wolfi-count-human-commits $last_timestamp $timestamp)
+			echo "$timestamp	$packages	$images	$cves	$advisories	$version_bumps	$epoch_bumps	$bot_commits	$human_commits"
+			last_timestamp="$timestamp"
 		done
 	done
 }
